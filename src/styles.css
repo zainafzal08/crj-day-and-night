@@ -238,8 +238,6 @@ body {
 .vote {
   --vote-accent-color: var(--accent-color);
   --vote-text-color: var(--text-color);
-  --vote-spinner-gap: 16px;
-  --vote-spinner-size: 1.5rem;
 
   display: flex;
   flex-direction: column;
@@ -255,15 +253,11 @@ body {
 }
 
 .vote-control {
-  display: flex;
-  align-items: center;
-  gap: var(--vote-spinner-gap);
+  position: relative;
 }
 
 .vote-bar-group {
   position: relative;
-  min-width: 0;
-  flex: 1;
 }
 
 .vote-description {
@@ -334,33 +328,6 @@ body {
   outline-offset: -4px;
 }
 
-.vote-option:disabled {
-  cursor: default;
-}
-
-.vote-spinner-slot {
-  display: grid;
-  width: var(--vote-spinner-size);
-  height: var(--vote-spinner-size);
-  flex: 0 0 var(--vote-spinner-size);
-  place-items: center;
-}
-
-.vote-spinner {
-  width: 100%;
-  height: 100%;
-  border: 0.2rem solid var(--muted-color);
-  border-bottom-color: transparent;
-  border-radius: 50%;
-  animation: vote-spinner 700ms linear infinite;
-}
-
-@keyframes vote-spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .vote-dot {
   width: 0.4rem;
   height: 0.4rem;
@@ -371,16 +338,29 @@ body {
 
 .vote-label {
   align-self: flex-end;
-  margin: 0 calc(var(--vote-spinner-size) + var(--vote-spinner-gap)) 0 0;
+  margin: 0;
   color: var(--vote-text-color);
   font-size: 0.8rem;
   transition: color 400ms ease;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .vote-spinner {
-    animation-duration: 1400ms;
-  }
+.debug-page {
+  position: fixed;
+  inset: 0;
+  padding: 32px;
+  overflow: auto;
+  background-color: #000;
+  color: #fff;
+}
+
+.debug-page pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.debug-page code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .results-page {

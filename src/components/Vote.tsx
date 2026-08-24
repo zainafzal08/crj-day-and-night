@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { recordDebugError } from "../debug-errors";
 import { initializeSessionKey } from "../session";
 import { useSong } from "../song-context";
 
@@ -6,6 +7,13 @@ const ratingOptions = [1, 2, 3, 4, 5] as const;
 const VOTES_STORAGE_KEY = "votes";
 
 type Rating = (typeof ratingOptions)[number];
+
+type RatingPayload = {
+  session_id: string;
+  rating: Rating;
+  album_id: "Day" | "Night";
+  track_number: number;
+};
 
 const ratingDescriptions: Record<Rating, string> = {
   1: "Flop",
@@ -58,10 +66,10 @@ export function Vote() {
   const selectedRating = ratings[songKey] ?? null;
   const [displayedRating, setDisplayedRating] = useState<Rating | null>(null);
   const [descriptionVisible, setDescriptionVisible] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [pendingRequests, setPendingRequests] = useState(0);
   const transitionTimer = useRef<number | null>(null);
   const animationFrame = useRef<number | null>(null);
+  const submissionQueue = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     try {
@@ -83,7 +91,6 @@ export function Vote() {
     const songRating = ratings[songKey] ?? null;
     setDisplayedRating(songRating);
     setDescriptionVisible(songRating !== null);
-    setSubmissionError(null);
   }, [songKey]);
 
   useEffect(() => {
@@ -97,6 +104,23 @@ export function Vote() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (pendingRequests === 0) {
+      return;
+    }
+
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [pendingRequests]);
 
   function showDescription() {
     animationFrame.current = window.requestAnimationFrame(() => {
@@ -138,42 +162,54 @@ export function Vote() {
     }, 200);
   }
 
-  async function handleRating(rating: Rating) {
-    if (selectedRating === rating || isSubmitting) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmissionError(null);
-
+  async function submitRating(payload: RatingPayload) {
     try {
       const response = await fetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: initializeSessionKey(),
-          rating,
-          album_id: currentSong?.side ?? "Day",
-          track_number: currentSong?.trackIndex ?? 1,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error("Rating request failed");
+        const responseBody = await response.text();
+        throw new Error(
+          `Rating request failed (${response.status})${responseBody ? `: ${responseBody}` : ""}`,
+        );
       }
 
       const result = (await response.json()) as { rating?: unknown };
 
-      if (!isRating(result.rating)) {
+      if (!isRating(result.rating) || result.rating !== payload.rating) {
         throw new Error("Invalid rating response");
       }
-
-      displayRating(result.rating);
-    } catch {
-      setSubmissionError("Save failed — try again");
+    } catch (error) {
+      recordDebugError("rating-submission", error, {
+        album_id: payload.album_id,
+        track_number: payload.track_number,
+        rating: payload.rating,
+      });
     } finally {
-      setIsSubmitting(false);
+      setPendingRequests((current) => Math.max(0, current - 1));
     }
+  }
+
+  function handleRating(rating: Rating) {
+    if (selectedRating === rating) {
+      return;
+    }
+
+    const payload: RatingPayload = {
+      session_id: initializeSessionKey(),
+      rating,
+      album_id: currentSong?.side ?? "Day",
+      track_number: currentSong?.trackIndex ?? 1,
+    };
+
+    displayRating(rating);
+    setPendingRequests((current) => current + 1);
+    submissionQueue.current = submissionQueue.current.then(() =>
+      submitRating(payload),
+    );
   }
 
   return (
@@ -206,7 +242,6 @@ export function Vote() {
                   role="radio"
                   aria-checked={selectedRating === rating}
                   aria-label={`${rating} out of 5`}
-                  disabled={isSubmitting}
                   key={rating}
                   onClick={() => handleRating(rating)}
                 >
@@ -216,18 +251,9 @@ export function Vote() {
             </div>
           </div>
         </div>
-        <span className="vote-spinner-slot">
-          {isSubmitting && (
-            <span
-              className="vote-spinner"
-              role="status"
-              aria-label="Saving rating"
-            />
-          )}
-        </span>
       </div>
       <p className="vote-label" aria-live="polite">
-        {submissionError ?? (selectedRating ? `${selectedRating}/5` : "No Rating")}
+        {selectedRating ? `${selectedRating}/5` : "No Rating"}
       </p>
     </div>
   );

@@ -1,0 +1,14 @@
+providers = ["node"]
+
+[variables]
+NODE_ENV = "production"
+NIXPACKS_SPA_CADDY = "false"
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"

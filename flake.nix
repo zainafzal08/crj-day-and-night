@@ -14,7 +14,7 @@
         in {
           default = pkgs.mkShell {
             name = "crj-day-and-night";
-            packages = with pkgs; [ nodejs_24 ];
+            packages = with pkgs; [ nodejs_22 ];
           };
         });
     };

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource-variable/jost";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { DebugPage } from "./components/DebugPage";
 import { Progress } from "./components/Progress";
 import { ResultsPage } from "./components/ResultsPage";
 import { SongBackground } from "./components/SongBackground";
@@ -37,6 +38,7 @@ createRoot(root).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/debug" element={<DebugPage />} />
         <Route path="/results" element={<ResultsPage />} />
       </Routes>
     </BrowserRouter>
