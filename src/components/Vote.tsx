@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { initializeSessionKey } from "../session";
 import { useSong } from "../song-context";
 
 const ratingOptions = [1, 2, 3, 4, 5] as const;
@@ -57,6 +58,8 @@ export function Vote() {
   const selectedRating = ratings[songKey] ?? null;
   const [displayedRating, setDisplayedRating] = useState<Rating | null>(null);
   const [descriptionVisible, setDescriptionVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const transitionTimer = useRef<number | null>(null);
   const animationFrame = useRef<number | null>(null);
 
@@ -80,6 +83,7 @@ export function Vote() {
     const songRating = ratings[songKey] ?? null;
     setDisplayedRating(songRating);
     setDescriptionVisible(songRating !== null);
+    setSubmissionError(null);
   }, [songKey]);
 
   useEffect(() => {
@@ -102,7 +106,7 @@ export function Vote() {
     });
   }
 
-  function handleRating(rating: Rating) {
+  function displayRating(rating: Rating) {
     setRatings((currentRatings) => ({
       ...currentRatings,
       [songKey]: rating,
@@ -134,6 +138,44 @@ export function Vote() {
     }, 200);
   }
 
+  async function handleRating(rating: Rating) {
+    if (selectedRating === rating || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmissionError(null);
+
+    try {
+      const response = await fetch("/api/ratings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: initializeSessionKey(),
+          rating,
+          album_id: currentSong?.side ?? "Day",
+          track_number: currentSong?.trackIndex ?? 1,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Rating request failed");
+      }
+
+      const result = (await response.json()) as { rating?: unknown };
+
+      if (!isRating(result.rating)) {
+        throw new Error("Invalid rating response");
+      }
+
+      displayRating(result.rating);
+    } catch {
+      setSubmissionError("Save failed — try again");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div
       className={`vote${selectedRating === 5 ? " vote--iconic" : ""}`}
@@ -163,6 +205,7 @@ export function Vote() {
                 role="radio"
                 aria-checked={selectedRating === rating}
                 aria-label={`${rating} out of 5`}
+                disabled={isSubmitting}
                 key={rating}
                 onClick={() => handleRating(rating)}
               >
@@ -172,8 +215,12 @@ export function Vote() {
           </div>
         </div>
       </div>
-      <p className="vote-label">
-        {selectedRating ? `${selectedRating}/5` : "No Rating"}
+      <p className="vote-label" aria-live="polite">
+        {isSubmitting
+          ? "Saving..."
+          : selectedRating
+            ? `${selectedRating}/5`
+            : submissionError ?? "No Rating"}
       </p>
     </div>
   );
