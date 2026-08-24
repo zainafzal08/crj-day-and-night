@@ -182,45 +182,52 @@ export function Vote() {
       aria-label="Vote"
     >
       <div className="vote-control">
-        {displayedRating && (
-          <p
-            className={`vote-description${
-              descriptionVisible ? " vote-description--visible" : ""
-            }`}
-            aria-live="polite"
-          >
-            {ratingDescriptions[displayedRating]}
-          </p>
-        )}
-        <div className="vote-bar">
-          <div
-            className="vote-fill"
-            style={{ width: `${(selectedRating ?? 0) * 20}%` }}
-          />
-          <div className="vote-options" role="radiogroup" aria-label="Rating">
-            {ratingOptions.map((rating) => (
-              <button
-                className="vote-option"
-                type="button"
-                role="radio"
-                aria-checked={selectedRating === rating}
-                aria-label={`${rating} out of 5`}
-                disabled={isSubmitting}
-                key={rating}
-                onClick={() => handleRating(rating)}
-              >
-                <span className="vote-dot" aria-hidden="true" />
-              </button>
-            ))}
+        <div className="vote-bar-group">
+          {displayedRating && (
+            <p
+              className={`vote-description${
+                descriptionVisible ? " vote-description--visible" : ""
+              }`}
+              aria-live="polite"
+            >
+              {ratingDescriptions[displayedRating]}
+            </p>
+          )}
+          <div className="vote-bar">
+            <div
+              className="vote-fill"
+              style={{ width: `${(selectedRating ?? 0) * 20}%` }}
+            />
+            <div className="vote-options" role="radiogroup" aria-label="Rating">
+              {ratingOptions.map((rating) => (
+                <button
+                  className="vote-option"
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedRating === rating}
+                  aria-label={`${rating} out of 5`}
+                  disabled={isSubmitting}
+                  key={rating}
+                  onClick={() => handleRating(rating)}
+                >
+                  <span className="vote-dot" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+        <span className="vote-spinner-slot">
+          {isSubmitting && (
+            <span
+              className="vote-spinner"
+              role="status"
+              aria-label="Saving rating"
+            />
+          )}
+        </span>
       </div>
       <p className="vote-label" aria-live="polite">
-        {isSubmitting
-          ? "Saving..."
-          : selectedRating
-            ? `${selectedRating}/5`
-            : submissionError ?? "No Rating"}
+        {submissionError ?? (selectedRating ? `${selectedRating}/5` : "No Rating")}
       </p>
     </div>
   );

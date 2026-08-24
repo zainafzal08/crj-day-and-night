@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "@fontsource-variable/jost";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Progress } from "./components/Progress";
+import { ResultsPage } from "./components/ResultsPage";
 import { SongBackground } from "./components/SongBackground";
 import { SongCarousel } from "./components/SongCarousel";
 import { Vote } from "./components/Vote";
@@ -23,10 +24,6 @@ function HomePage() {
       </main>
     </SongProvider>
   );
-}
-
-function ResultsPage() {
-  return <main className="results-page" aria-label="Results" />;
 }
 
 const root = document.getElementById("root");

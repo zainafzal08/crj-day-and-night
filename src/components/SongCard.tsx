@@ -2,12 +2,18 @@ import type { CSSProperties } from "react";
 import { getArtworkUrl } from "../artwork";
 import type { Song } from "../song-context";
 
-export function SongCard({ song }: { song: Song }) {
+export function SongCard({
+  song,
+  className,
+}: {
+  song: Song;
+  className?: string;
+}) {
   const imageUrl = getArtworkUrl(song);
 
   return (
     <div
-      className="song-card"
+      className={`song-card${className ? ` ${className}` : ""}`}
       style={
         {
           "--song-art": `url(${imageUrl})`,
