@@ -139,7 +139,7 @@ export function Vote() {
   }
 
   async function handleRating(rating: Rating) {
-    if (selectedRating !== null || isSubmitting) {
+    if (selectedRating === rating || isSubmitting) {
       return;
     }
 
@@ -205,7 +205,7 @@ export function Vote() {
                 role="radio"
                 aria-checked={selectedRating === rating}
                 aria-label={`${rating} out of 5`}
-                disabled={selectedRating !== null || isSubmitting}
+                disabled={isSubmitting}
                 key={rating}
                 onClick={() => handleRating(rating)}
               >

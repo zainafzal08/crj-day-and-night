@@ -57,34 +57,19 @@ export default async function handler(request: Request) {
   const trackNumber = body.track_number as number;
   const database = getDatabase();
 
-  const [insertedRating] = await database.sql<{ rating: number }>`
+  const [storedRating] = await database.sql<{ rating: number }>`
     INSERT INTO song_ratings (session_id, rating, album_id, track_number)
     VALUES (${sessionId}, ${rating}, ${albumId}, ${trackNumber})
-    ON CONFLICT (session_id, album_id, track_number) DO NOTHING
+    ON CONFLICT (session_id, album_id, track_number)
+    DO UPDATE SET rating = EXCLUDED.rating
     RETURNING rating
   `;
 
-  if (insertedRating) {
-    return Response.json(
-      { rating: insertedRating.rating, created: true },
-      { status: 201 },
-    );
-  }
-
-  const [existingRating] = await database.sql<{ rating: number }>`
-    SELECT rating
-    FROM song_ratings
-    WHERE session_id = ${sessionId}
-      AND album_id = ${albumId}
-      AND track_number = ${trackNumber}
-    LIMIT 1
-  `;
-
-  if (!existingRating) {
+  if (!storedRating) {
     return Response.json({ error: "Could not store rating" }, { status: 500 });
   }
 
-  return Response.json({ rating: existingRating.rating, created: false });
+  return Response.json({ rating: storedRating.rating });
 }
 
 export const config = {
