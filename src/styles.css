@@ -324,6 +324,10 @@ body {
   outline-offset: -4px;
 }
 
+.vote-option:disabled {
+  cursor: default;
+}
+
 .vote-dot {
   width: 0.4rem;
   height: 0.4rem;
