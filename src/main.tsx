@@ -1,10 +1,12 @@
-import { StrictMode } from "react";
+import { StrictMode, useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource-variable/jost";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { DebugPage } from "./components/DebugPage";
+import { LoadingScreen } from "./components/LoadingScreen";
 import { Progress } from "./components/Progress";
 import { ResultsPage } from "./components/ResultsPage";
+import { ReleaseGate } from "./components/ReleaseGate";
 import { SongBackground } from "./components/SongBackground";
 import { SongCarousel } from "./components/SongCarousel";
 import { Vote } from "./components/Vote";
@@ -15,15 +17,21 @@ import "./styles.css";
 initializeSessionKey();
 
 function HomePage() {
+  const [artworkReady, setArtworkReady] = useState(false);
+  const handleArtworkReady = useCallback(() => setArtworkReady(true), []);
+
   return (
-    <SongProvider>
-      <SongBackground />
-      <main className="home-page">
-        <SongCarousel />
-        <Progress />
-        <Vote />
-      </main>
-    </SongProvider>
+    <ReleaseGate>
+      <SongProvider>
+        <SongBackground onReady={handleArtworkReady} />
+        <main className="home-page">
+          <SongCarousel />
+          <Progress />
+          <Vote />
+        </main>
+        <LoadingScreen visible={!artworkReady} />
+      </SongProvider>
+    </ReleaseGate>
   );
 }
 

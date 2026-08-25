@@ -32,6 +32,7 @@ body {
   padding: 32px;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   color: var(--text-color);
   background-color: var(--bg-color);
@@ -116,16 +117,16 @@ body {
   scroll-snap-stop: always;
 }
 
-.song-card::before {
+.song-card-background {
   position: absolute;
   inset: -52px;
-  content: "";
-  background-image: var(--song-art);
-  background-position: center;
-  background-size: cover;
+  width: calc(100% + 104px);
+  height: calc(100% + 104px);
   filter: blur(52px) brightness(0.82) saturate(1.25);
+  object-fit: cover;
   transform: scale(1.12);
   transform-origin: center;
+  user-select: none;
 }
 
 .song-card-track-number {
@@ -232,7 +233,7 @@ body {
   align-self: flex-end;
   margin: 0;
   color: var(--text-color);
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .vote {
@@ -288,7 +289,7 @@ body {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 3rem;
+  height: 3.2rem;
   overflow: hidden;
   border-radius: 999px;
   background-color: var(--muted-color);
@@ -340,8 +341,76 @@ body {
   align-self: flex-end;
   margin: 0;
   color: var(--vote-text-color);
-  font-size: 0.8rem;
+  font-size: 1rem;
   transition: color 400ms ease;
+}
+
+.loading-screen,
+.release-page {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: #000;
+  color: #fff;
+  place-items: center;
+}
+
+.loading-screen {
+  opacity: 1;
+  transition:
+    opacity 250ms ease,
+    visibility 0ms linear 0ms;
+}
+
+.loading-screen--hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 250ms ease,
+    visibility 0ms linear 250ms;
+}
+
+.loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0.2rem solid rgb(255 255 255 / 20%);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: loading-spinner 700ms linear infinite;
+}
+
+@keyframes loading-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.release-page {
+  align-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+}
+
+.release-page time {
+  font-size: clamp(2rem, 10vw, 4rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.release-page p {
+  margin: 0;
+  color: rgb(255 255 255 / 45%);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .debug-page {
@@ -373,6 +442,7 @@ body {
   padding: clamp(32px, 5vw, 64px);
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: auto;
   background-color: #000;
   color: #fff;
@@ -521,5 +591,48 @@ body {
   .results-ranking-list {
     display: flex;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-right: max(32px, env(safe-area-inset-right));
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+    padding-left: max(32px, env(safe-area-inset-left));
+  }
+
+  .home-page {
+    gap: 12px;
+  }
+
+  .song-carousel {
+    height: min(520px, 50dvh);
+    max-height: 520px;
+    flex: 0 1 min(520px, 50dvh);
+  }
+
+  .song-card {
+    height: 100%;
+  }
+
+  .song-card-artwork {
+    top: clamp(56px, 10dvh, 78px);
+    width: min(62%, 230px);
+  }
+
+  .song-card-copy {
+    bottom: 20px;
+  }
+
+  .progress,
+  .vote {
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation-duration: 1400ms;
   }
 }

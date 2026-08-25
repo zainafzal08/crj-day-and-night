@@ -9,6 +9,9 @@ export function SongCarousel() {
   const { currentSong, setCurrentSong } = useSong();
   const carouselRef = useRef<HTMLDivElement>(null);
   const initialSong = useRef(currentSong);
+  const prioritySongKey = useRef(
+    currentSong ? `${currentSong.side}-${currentSong.trackIndex}` : "Day-1",
+  );
   const activeIndex = useRef(-1);
   const animationFrame = useRef<number | null>(null);
 
@@ -88,6 +91,9 @@ export function SongCarousel() {
       {songs.map((song) => (
         <SongCard
           key={`${song.side}-${song.trackIndex}`}
+          priority={
+            `${song.side}-${song.trackIndex}` === prioritySongKey.current
+          }
           song={song}
         />
       ))}

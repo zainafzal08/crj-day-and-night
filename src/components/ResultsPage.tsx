@@ -104,6 +104,7 @@ export function ResultsPage() {
         {bestSong && (
           <SongCard
             className="song-card--result"
+            priority
             song={{
               side: bestSong.album_id,
               trackIndex: bestSong.track_number,
