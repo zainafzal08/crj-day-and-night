@@ -261,11 +261,21 @@ body {
   position: relative;
 }
 
-.vote-description {
+.vote-description-viewport {
   position: absolute;
   z-index: 0;
   right: 0;
-  bottom: calc(100% + 12px);
+  bottom: 100%;
+  left: 0;
+  height: 3rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vote-description {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
   left: 0;
   margin: 0;
   color: var(--vote-text-color);
@@ -607,9 +617,9 @@ body {
   }
 
   .song-carousel {
-    height: min(520px, 50dvh);
+    height: min(520px, 65dvh);
     max-height: 520px;
-    flex: 0 1 min(520px, 50dvh);
+    flex: 0 1 min(520px, 65dvh);
   }
 
   .song-card {

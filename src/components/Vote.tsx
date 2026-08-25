@@ -220,14 +220,16 @@ export function Vote() {
       <div className="vote-control">
         <div className="vote-bar-group">
           {displayedRating && (
-            <p
-              className={`vote-description${
-                descriptionVisible ? " vote-description--visible" : ""
-              }`}
-              aria-live="polite"
-            >
-              {ratingDescriptions[displayedRating]}
-            </p>
+            <div className="vote-description-viewport">
+              <p
+                className={`vote-description${
+                  descriptionVisible ? " vote-description--visible" : ""
+                }`}
+                aria-live="polite"
+              >
+                {ratingDescriptions[displayedRating]}
+              </p>
+            </div>
           )}
           <div className="vote-bar">
             <div
