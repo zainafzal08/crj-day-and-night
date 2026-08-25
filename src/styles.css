@@ -1,6 +1,6 @@
 :root {
   --bg-color: #fff;
-  --background-brightness: 2;
+  --background-brightness: 1.5;
   --background-saturation: 1;
   --text-color: #000;
   --accent-color: #000;
@@ -89,7 +89,7 @@ body {
 
 .song-carousel {
   display: flex;
-  padding: 0.2rem;
+  padding: 0.2rem 16px;
   width: 100%;
   height: 520px;
   flex: 0 0 520px;
@@ -97,6 +97,7 @@ body {
   border-radius: 12px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  scroll-padding-inline: 16px;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -107,7 +108,7 @@ body {
 }
 
 .song-card {
-  --song-artwork-width: min(64.6%, 266px);
+  --song-artwork-width: min(77.5%, 319px);
 
   position: relative;
   width: 100%;
@@ -136,9 +137,9 @@ body {
   position: absolute;
   z-index: 1;
   top: 4px;
-  left: 18px;
+  left: 16px;
   color: rgb(255 255 255 / 40%);
-  font-size: 3rem;
+  font-size: 2.1rem;
   font-weight: 700;
 }
 
@@ -158,7 +159,7 @@ body {
 .song-card-copy {
   position: absolute;
   z-index: 1;
-  bottom: 28px;
+  bottom: calc(31px + 0.8rem);
   left: 50%;
   width: var(--song-artwork-width);
   transform: translateX(-50%);
@@ -479,7 +480,7 @@ body {
 }
 
 .song-card--result {
-  --song-artwork-width: min(66.5%, 199.5px);
+  --song-artwork-width: min(79.8%, 239.5px);
 
   width: min(100%, 302px);
   height: 430px;
@@ -489,8 +490,8 @@ body {
 
 .song-card--result .song-card-track-number {
   top: 2px;
-  left: 10px;
-  font-size: 2.25rem;
+  left: 8px;
+  font-size: 1.6rem;
 }
 
 .song-card--result .song-card-artwork {
@@ -498,7 +499,7 @@ body {
 }
 
 .song-card--result .song-card-copy {
-  bottom: 28px;
+  bottom: calc(31px + 0.8rem);
 }
 
 .results-feature h1 {
@@ -630,7 +631,7 @@ body {
   }
 
   .song-carousel .song-card {
-    --song-artwork-width: min(58.9%, 218.5px);
+    --song-artwork-width: min(70.7%, 262px);
   }
 
   .song-card-artwork {
@@ -638,7 +639,7 @@ body {
   }
 
   .song-card-copy {
-    bottom: 20px;
+    bottom: calc(22px + 0.8rem);
   }
 
   .progress,
