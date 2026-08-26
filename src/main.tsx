@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "@fontsource-variable/jost";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { DebugPage } from "./components/DebugPage";
+import { GamePage } from "./components/GamePage";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { Progress } from "./components/Progress";
 import { ResultsPage } from "./components/ResultsPage";
@@ -47,6 +48,7 @@ createRoot(root).render(
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/debug" element={<DebugPage />} />
+        <Route path="/game" element={<GamePage />} />
         <Route path="/results" element={<ResultsPage />} />
       </Routes>
     </BrowserRouter>

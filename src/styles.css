@@ -662,6 +662,368 @@ body {
   }
 }
 
+.game-page {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  padding: clamp(20px, 5vw, 64px);
+  overflow: auto;
+  background:
+    radial-gradient(circle at 12% 12%, rgb(236 72 153 / 24%), transparent 34%),
+    radial-gradient(circle at 88% 88%, rgb(124 58 237 / 28%), transparent 36%),
+    #08070a;
+  color: #fff;
+  place-items: center;
+}
+
+.game-card {
+  width: min(100%, 720px);
+  padding: clamp(22px, 5vw, 44px);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 28px;
+  background: rgb(17 15 20 / 88%);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(18px);
+}
+
+.game-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.game-eyebrow {
+  margin: 0 0 4px;
+  color: #f9a8d4;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 3.6rem);
+  font-weight: 520;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+
+.game-score {
+  display: flex;
+  flex: none;
+  gap: 18px;
+  color: rgb(255 255 255 / 54%);
+  font-size: 0.8rem;
+}
+
+.game-score span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.game-score strong {
+  color: #fff;
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.game-player {
+  position: relative;
+  margin-top: 36px;
+  height: 152px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #201d23;
+}
+
+.game-player-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #211b25, #17141a);
+}
+
+.game-player-cover p {
+  margin: 0;
+  color: rgb(255 255 255 / 48%);
+  font-size: 0.85rem;
+}
+
+.game-disc {
+  width: 52px;
+  height: 52px;
+  border: 13px solid #f472b6;
+  border-radius: 50%;
+  background: #161218;
+  box-shadow: 0 0 36px rgb(244 114 182 / 35%);
+}
+
+.game-disc--playing {
+  animation: game-spin 3s linear infinite;
+}
+
+@keyframes game-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.game-play-button,
+.game-guess button,
+.game-answer button {
+  border: 0;
+  border-radius: 999px;
+  background: #f472b6;
+  color: #1b1018;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+.game-play-button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px 20px;
+}
+
+.game-play-button:disabled,
+.game-guess button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.game-error {
+  margin: 16px 0 0;
+  color: #fda4af;
+  text-align: center;
+}
+
+.game-guess {
+  display: grid;
+  gap: 9px;
+  margin-top: 28px;
+}
+
+.game-guess label {
+  color: rgb(255 255 255 / 68%);
+  font-size: 0.88rem;
+}
+
+.game-guess > div {
+  display: flex;
+  gap: 10px;
+}
+
+.game-guess input {
+  min-width: 0;
+  padding: 14px 18px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  outline: none;
+  background: rgb(255 255 255 / 7%);
+  color: #fff;
+  flex: 1;
+  font: inherit;
+}
+
+.game-guess input:focus {
+  border-color: #f472b6;
+  box-shadow: 0 0 0 3px rgb(244 114 182 / 16%);
+}
+
+.game-guess input::placeholder {
+  color: rgb(255 255 255 / 30%);
+}
+
+.game-guess button {
+  padding: 0 24px;
+}
+
+.game-answer {
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 5%);
+  text-align: center;
+}
+
+.game-answer--correct {
+  border-color: rgb(74 222 128 / 38%);
+  background: rgb(74 222 128 / 8%);
+}
+
+.game-answer--incorrect {
+  border-color: rgb(251 113 133 / 38%);
+  background: rgb(251 113 133 / 8%);
+}
+
+.game-answer p,
+.game-answer h2 {
+  margin: 0;
+}
+
+.game-answer a {
+  display: block;
+  margin-top: 8px;
+  color: rgb(255 255 255 / 58%);
+  font-size: 0.82rem;
+}
+
+.game-answer p {
+  color: rgb(255 255 255 / 58%);
+}
+
+.game-answer h2 {
+  margin-top: 3px;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  font-weight: 550;
+}
+
+.game-answer button {
+  margin-top: 18px;
+  padding: 11px 22px;
+}
+
+.game-footer {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+  color: rgb(255 255 255 / 45%);
+  font-size: 0.82rem;
+}
+
+.game-footer a {
+  color: inherit;
+}
+
+.game-footer summary {
+  cursor: pointer;
+}
+
+.game-auth {
+  display: grid;
+  gap: 12px;
+  margin-top: 36px;
+  padding: clamp(22px, 5vw, 34px);
+  border: 1px solid rgb(244 114 182 / 28%);
+  border-radius: 20px;
+  background: rgb(244 114 182 / 7%);
+  text-align: center;
+}
+
+.game-auth h2,
+.game-auth p {
+  margin: 0;
+}
+
+.game-auth h2 {
+  font-size: 1.45rem;
+  font-weight: 550;
+}
+
+.game-auth p {
+  color: rgb(255 255 255 / 58%);
+}
+
+.game-auth code {
+  overflow-wrap: anywhere;
+  color: #f9a8d4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.game-auth > button {
+  justify-self: center;
+  margin-top: 4px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #1ed760;
+  color: #061d0e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+.game-notice {
+  margin: 14px 0 0;
+  color: #fde68a;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.game-disconnect {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 255 255 / 45%);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.game-song-scores {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.game-song-scores > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3rem 3rem;
+  gap: 8px;
+}
+
+.game-song-scores > div span:first-child {
+  overflow: hidden;
+  color: rgb(255 255 255 / 72%);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-song-scores button {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fda4af;
+  cursor: pointer;
+  font: inherit;
+}
+
+@media (max-width: 560px) {
+  .game-header {
+    flex-direction: column;
+  }
+
+  .game-score span {
+    align-items: flex-start;
+  }
+
+  .game-guess > div {
+    flex-direction: column;
+  }
+
+  .game-guess button {
+    padding: 13px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-disc {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loading-spinner {
     animation-duration: 1400ms;
