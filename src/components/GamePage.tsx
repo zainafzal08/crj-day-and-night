@@ -20,6 +20,7 @@ type SongScore = { correct: number; incorrect: number };
 type Scores = Record<string, SongScore>;
 
 const playlistId = "6N2p3X3BzAGlBn3SQCfAGB";
+const heardStorageKey = "crj-song-game-heard-v1";
 const scoreStorageKey = "crj-song-game-scores-v1";
 const spotifyClientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID?.trim() ?? "";
 
@@ -52,6 +53,15 @@ function loadScores(): Scores {
   }
 }
 
+function loadHeardSongs() {
+  try {
+    const stored = localStorage.getItem(heardStorageKey);
+    return new Set<string>(stored ? (JSON.parse(stored) as string[]) : []);
+  } catch {
+    return new Set<string>();
+  }
+}
+
 export function GamePage() {
   const [songs, setSongs] = useState<GameSong[]>(gameSongs);
   const [song, setSong] = useState(() => randomSong(gameSongs));
@@ -63,6 +73,7 @@ export function GamePage() {
   const [hasPlayed, setHasPlayed] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [scores, setScores] = useState<Scores>(loadScores);
+  const [heardSongs, setHeardSongs] = useState<Set<string>>(loadHeardSongs);
   const [playerError, setPlayerError] = useState<string | null>(null);
   const [playlistNotice, setPlaylistNotice] = useState<string | null>(null);
   const player = useRef<SpotifyPlayer | null>(null);
@@ -178,6 +189,11 @@ export function GamePage() {
     [scores, songs],
   );
 
+  const heardCount = useMemo(
+    () => songs.reduce((total, currentSong) => total + Number(heardSongs.has(currentSong.id)), 0),
+    [heardSongs, songs],
+  );
+
   async function startSong(targetSong: GameSong) {
     if (!deviceId || !player.current || !spotifyClientId) {
       return;
@@ -192,6 +208,14 @@ export function GamePage() {
         return;
       }
       await playSpotifySong(token.accessToken, deviceId, targetSong);
+      setHeardSongs((current) => {
+        if (current.has(targetSong.id)) {
+          return current;
+        }
+        const next = new Set(current).add(targetSong.id);
+        localStorage.setItem(heardStorageKey, JSON.stringify([...next]));
+        return next;
+      });
       setHasPlayed(true);
     } catch (error) {
       setPlayerError(
@@ -238,7 +262,9 @@ export function GamePage() {
   }
 
   function resetScores() {
+    localStorage.removeItem(heardStorageKey);
     localStorage.removeItem(scoreStorageKey);
+    setHeardSongs(new Set());
     setScores({});
   }
 
@@ -262,6 +288,7 @@ export function GamePage() {
           <div className="game-score" aria-label="Overall score">
             <span><strong>{totals.correct}</strong> correct</span>
             <span><strong>{totals.incorrect}</strong> incorrect</span>
+            <span><strong>{heardCount}/{songs.length}</strong> heard</span>
           </div>
         </header>
 
@@ -370,7 +397,7 @@ export function GamePage() {
                     <span>{scores[attemptedSong.id]?.incorrect ?? 0} ✕</span>
                   </div>
                 ))}
-                <button type="button" onClick={resetScores}>Reset scores</button>
+                <button type="button" onClick={resetScores}>Reset scores and heard progress</button>
               </div>
             ) : (
               <p>No guesses yet.</p>
