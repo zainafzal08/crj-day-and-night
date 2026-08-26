@@ -888,8 +888,14 @@ body {
   font-weight: 550;
 }
 
-.game-answer button {
+.game-answer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
   margin-top: 18px;
+}
+
+.game-answer-actions button {
   padding: 11px 22px;
 }
 

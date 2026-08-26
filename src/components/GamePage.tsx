@@ -261,6 +261,24 @@ export function GamePage() {
     await startSong(next);
   }
 
+  function markIncorrectAsCorrect() {
+    if (result !== "incorrect") {
+      return;
+    }
+
+    const currentScore = scores[song.id] ?? { correct: 0, incorrect: 0 };
+    const nextScores = {
+      ...scores,
+      [song.id]: {
+        correct: currentScore.correct + 1,
+        incorrect: Math.max(0, currentScore.incorrect - 1),
+      },
+    };
+    setScores(nextScores);
+    setResult("correct");
+    localStorage.setItem(scoreStorageKey, JSON.stringify(nextScores));
+  }
+
   function resetScores() {
     localStorage.removeItem(heardStorageKey);
     localStorage.removeItem(scoreStorageKey);
@@ -368,7 +386,14 @@ export function GamePage() {
                 >
                   Open track in Spotify
                 </a>
-                <button type="button" onClick={() => void nextSong()}>Next song</button>
+                <div className="game-answer-actions">
+                  {result === "incorrect" && (
+                    <button type="button" onClick={markIncorrectAsCorrect}>
+                      Mark as correct
+                    </button>
+                  )}
+                  <button type="button" onClick={() => void nextSong()}>Next song</button>
+                </div>
               </section>
             )}
           </>
