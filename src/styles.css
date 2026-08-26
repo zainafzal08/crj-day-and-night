@@ -97,9 +97,23 @@ body {
   border-radius: 12px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent
+  );
   scroll-padding-inline: 16px;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent
+  );
   -webkit-overflow-scrolling: touch;
 }
 

@@ -6,6 +6,7 @@ export function Progress() {
   const trackIndex = currentSong?.trackIndex ?? 1;
   const albumTrackIndex = side === "Night" ? trackIndex + 12 : trackIndex;
   const percentage = Math.min((albumTrackIndex / 24) * 100, 100);
+  const isFirstCard = albumTrackIndex === 1;
   const isLastCard = albumTrackIndex === 24;
   const label = `${side} Side, Track ${albumTrackIndex}`;
 
@@ -23,7 +24,7 @@ export function Progress() {
           className="progress-fill"
           style={{ width: `${percentage}%` }}
         >
-          {!isLastCard && (
+          {!isFirstCard && !isLastCard && (
             <span className="progress-tail" aria-hidden="true" />
           )}
           <span className="progress-dot" aria-hidden="true" />
