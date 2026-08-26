@@ -62,6 +62,16 @@ function loadHeardSongs() {
   }
 }
 
+function formatGuessTime(seconds: number) {
+  if (seconds < 60) {
+    return `${seconds.toFixed(1)} seconds`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = (seconds % 60).toFixed(1).padStart(4, "0");
+  return `${minutes}:${remainingSeconds}`;
+}
+
 export function GamePage() {
   const [songs, setSongs] = useState<GameSong[]>(gameSongs);
   const [song, setSong] = useState(() => randomSong(gameSongs));
@@ -72,11 +82,13 @@ export function GamePage() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [guessTime, setGuessTime] = useState<number | null>(null);
   const [scores, setScores] = useState<Scores>(loadScores);
   const [heardSongs, setHeardSongs] = useState<Set<string>>(loadHeardSongs);
   const [playerError, setPlayerError] = useState<string | null>(null);
   const [playlistNotice, setPlaylistNotice] = useState<string | null>(null);
   const player = useRef<SpotifyPlayer | null>(null);
+  const roundStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
     if (!spotifyClientId) {
@@ -216,6 +228,9 @@ export function GamePage() {
         localStorage.setItem(heardStorageKey, JSON.stringify([...next]));
         return next;
       });
+      if (roundStartedAt.current === null) {
+        roundStartedAt.current = performance.now();
+      }
       setHasPlayed(true);
     } catch (error) {
       setPlayerError(
@@ -238,6 +253,9 @@ export function GamePage() {
     void player.current?.pause();
     const nextResult: Result =
       normalizeTitle(guess) === normalizeTitle(song.title) ? "correct" : "incorrect";
+    if (roundStartedAt.current !== null) {
+      setGuessTime((performance.now() - roundStartedAt.current) / 1000);
+    }
     const currentScore = scores[song.id] ?? { correct: 0, incorrect: 0 };
     const nextScores = {
       ...scores,
@@ -258,6 +276,8 @@ export function GamePage() {
     setGuess("");
     setHasPlayed(false);
     setResult(null);
+    setGuessTime(null);
+    roundStartedAt.current = null;
     await startSong(next);
   }
 
@@ -379,6 +399,11 @@ export function GamePage() {
               <section className={`game-answer game-answer--${result}`} aria-live="polite">
                 <p>{result === "correct" ? "Correct!" : "Not quite — it was"}</p>
                 <h2>{song.title}</h2>
+                {result === "correct" && guessTime !== null && (
+                  <p className="game-answer-time">
+                    You got it in {formatGuessTime(guessTime)}.
+                  </p>
+                )}
                 <a
                   href={`https://open.spotify.com/track/${song.id}`}
                   target="_blank"

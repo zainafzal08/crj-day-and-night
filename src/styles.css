@@ -882,6 +882,13 @@ body {
   color: rgb(255 255 255 / 58%);
 }
 
+.game-answer .game-answer-time {
+  margin-top: 9px;
+  color: #86efac;
+  font-size: 0.92rem;
+  font-weight: 550;
+}
+
 .game-answer h2 {
   margin-top: 3px;
   font-size: clamp(1.4rem, 5vw, 2rem);
