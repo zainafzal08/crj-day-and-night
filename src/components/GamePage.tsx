@@ -178,7 +178,7 @@ export function GamePage() {
     [scores, songs],
   );
 
-  async function playFromStart() {
+  async function startSong(targetSong: GameSong) {
     if (!deviceId || !player.current || !spotifyClientId) {
       return;
     }
@@ -191,13 +191,17 @@ export function GamePage() {
         setAuthStatus("signed-out");
         return;
       }
-      await playSpotifySong(token.accessToken, deviceId, song);
+      await playSpotifySong(token.accessToken, deviceId, targetSong);
       setHasPlayed(true);
     } catch (error) {
       setPlayerError(
         error instanceof Error ? error.message : "Spotify playback failed",
       );
     }
+  }
+
+  function playFromStart() {
+    return startSong(song);
   }
 
   function submitGuess(event: FormEvent) {
@@ -224,12 +228,13 @@ export function GamePage() {
     localStorage.setItem(scoreStorageKey, JSON.stringify(nextScores));
   }
 
-  function nextSong() {
+  async function nextSong() {
     const next = randomSong(songs, song.id);
     setSong(next);
     setGuess("");
     setHasPlayed(false);
     setResult(null);
+    await startSong(next);
   }
 
   function resetScores() {
@@ -336,7 +341,7 @@ export function GamePage() {
                 >
                   Open track in Spotify
                 </a>
-                <button type="button" onClick={nextSong}>Next song</button>
+                <button type="button" onClick={() => void nextSong()}>Next song</button>
               </section>
             )}
           </>
