@@ -494,10 +494,10 @@ body {
 }
 
 .song-card--result {
-  --song-artwork-width: min(79.8%, 239.5px);
+  --song-artwork-width: min(70%, 210px);
 
   width: min(100%, 302px);
-  height: 430px;
+  height: 470px;
   flex: none;
   scroll-snap-align: none;
 }
@@ -505,7 +505,7 @@ body {
 .song-card--result .song-card-track-number {
   top: 2px;
   left: 8px;
-  font-size: 1.6rem;
+  font-size: 2rem;
 }
 
 .song-card--result .song-card-artwork {
@@ -513,7 +513,7 @@ body {
 }
 
 .song-card--result .song-card-copy {
-  bottom: calc(31px + 0.8rem);
+  bottom: 31px;
 }
 
 .results-feature h1 {
