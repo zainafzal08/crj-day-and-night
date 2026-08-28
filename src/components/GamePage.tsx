@@ -17,7 +17,6 @@ import {
 type AuthStatus =
   | "config-missing"
   | "connecting"
-  | "playlist-error"
   | "ready"
   | "signed-out";
 type Result = "correct" | "incorrect";
@@ -171,23 +170,27 @@ export function GamePage() {
 
         try {
           const liveSongs = await fetchPlaylistSongs(token.accessToken, playlistId);
-          if (!liveSongs.length) {
+          const allowedSongIds = new Set(gameSongs.map(({ id }) => id));
+          const verifiedSongs = liveSongs.filter(({ id }) => allowedSongIds.has(id));
+          if (!verifiedSongs.length) {
             throw new Error("The Spotify playlist contains no playable tracks");
           }
           if (!cancelled) {
-            setSongs(liveSongs);
-            setSong(weightedRandomSong(liveSongs, heardSongs, scores));
+            setSongs(verifiedSongs);
+            setSong(weightedRandomSong(verifiedSongs, heardSongs, scores));
           }
         } catch (error) {
           if (!cancelled) {
             setPlaylistNotice(
-              error instanceof Error
-                ? error.message
-                : "The live Spotify playlist could not be loaded",
+              `${
+                error instanceof Error
+                  ? error.message
+                  : "The live Spotify playlist could not be loaded"
+              }. Using the verified ${gameSongs.length}-song playlist.`,
             );
-            setAuthStatus("playlist-error");
+            setSongs(gameSongs);
+            setSong(weightedRandomSong(gameSongs, heardSongs, scores));
           }
-          return;
         }
 
         const spotify = await getSpotifyPlaybackSdk();
@@ -482,17 +485,6 @@ export function GamePage() {
             <p>Connect your Spotify Premium account to start the game.</p>
             <button type="button" onClick={() => void startSpotifyLogin(spotifyClientId)}>
               Connect Spotify
-            </button>
-          </section>
-        ) : authStatus === "playlist-error" ? (
-          <section className="game-auth">
-            <h2>Playlist unavailable</h2>
-            <p>
-              The game will not use its saved snapshot, ensuring suggested songs
-              cannot enter the game.
-            </p>
-            <button type="button" onClick={() => window.location.reload()}>
-              Retry playlist
             </button>
           </section>
         ) : (
