@@ -14,22 +14,60 @@ import {
   type SpotifyPlayer,
 } from "../spotify-player";
 
-type AuthStatus = "config-missing" | "connecting" | "ready" | "signed-out";
+type AuthStatus =
+  | "config-missing"
+  | "connecting"
+  | "playlist-error"
+  | "ready"
+  | "signed-out";
 type Result = "correct" | "incorrect";
 type SongScore = { correct: number; incorrect: number };
 type Scores = Record<string, SongScore>;
+type GuessTiming = { correctGuesses: number; totalSeconds: number };
 
 const playlistId = "6N2p3X3BzAGlBn3SQCfAGB";
 const heardStorageKey = "crj-song-game-heard-v1";
 const scoreStorageKey = "crj-song-game-scores-v1";
+const timingStorageKey = "crj-song-game-timing-v1";
 const spotifyClientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID?.trim() ?? "";
 
-function randomSong(pool: GameSong[], excludeId?: string) {
-  const candidates = pool.filter((candidate) => candidate.id !== excludeId);
-  const available = candidates.length ? candidates : pool;
+function randomUnit() {
   const randomValue = new Uint32Array(1);
   crypto.getRandomValues(randomValue);
-  return available[randomValue[0] % available.length] ?? gameSongs[0];
+  return randomValue[0] / 2 ** 32;
+}
+
+function weightedRandomSong(
+  pool: GameSong[],
+  heardSongs: Set<string>,
+  scores: Scores,
+  excludeId?: string,
+) {
+  const candidates = pool.filter((candidate) => candidate.id !== excludeId);
+  const available = candidates.length ? candidates : pool;
+  const weightedCandidates = available.map((candidate) => {
+    const score = scores[candidate.id];
+    const weight = !heardSongs.has(candidate.id)
+      ? 12
+      : score?.incorrect
+        ? 5 + Math.min(score.incorrect, 5)
+        : 1;
+    return { song: candidate, weight };
+  });
+  const totalWeight = weightedCandidates.reduce(
+    (total, candidate) => total + candidate.weight,
+    0,
+  );
+  let selection = randomUnit() * totalWeight;
+
+  for (const candidate of weightedCandidates) {
+    selection -= candidate.weight;
+    if (selection < 0) {
+      return candidate.song;
+    }
+  }
+
+  return weightedCandidates.at(-1)?.song ?? gameSongs[0];
 }
 
 function normalizeTitle(value: string) {
@@ -39,8 +77,7 @@ function normalizeTitle(value: string) {
     .replace(/\s*[-–—]\s*bonus track\s*$/giu, "")
     .replace(/[’‘]/gu, "'")
     .replace(/&/gu, "and")
-    .replace(/[^a-z0-9]+/giu, " ")
-    .trim()
+    .replace(/[^a-z0-9]+/giu, "")
     .toLowerCase();
 }
 
@@ -62,6 +99,17 @@ function loadHeardSongs() {
   }
 }
 
+function loadGuessTiming(): GuessTiming {
+  try {
+    const stored = localStorage.getItem(timingStorageKey);
+    return stored
+      ? (JSON.parse(stored) as GuessTiming)
+      : { correctGuesses: 0, totalSeconds: 0 };
+  } catch {
+    return { correctGuesses: 0, totalSeconds: 0 };
+  }
+}
+
 function formatGuessTime(seconds: number) {
   if (seconds < 60) {
     return `${seconds.toFixed(1)} seconds`;
@@ -72,9 +120,18 @@ function formatGuessTime(seconds: number) {
   return `${minutes}:${remainingSeconds}`;
 }
 
+function formatPlaybackTime(milliseconds: number) {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
 export function GamePage() {
   const [songs, setSongs] = useState<GameSong[]>(gameSongs);
-  const [song, setSong] = useState(() => randomSong(gameSongs));
+  const [song, setSong] = useState(() =>
+    weightedRandomSong(gameSongs, loadHeardSongs(), loadScores()),
+  );
   const [guess, setGuess] = useState("");
   const [authStatus, setAuthStatus] = useState<AuthStatus>(
     spotifyClientId ? "connecting" : "config-missing",
@@ -85,9 +142,14 @@ export function GamePage() {
   const [guessTime, setGuessTime] = useState<number | null>(null);
   const [scores, setScores] = useState<Scores>(loadScores);
   const [heardSongs, setHeardSongs] = useState<Set<string>>(loadHeardSongs);
+  const [guessTiming, setGuessTiming] = useState<GuessTiming>(loadGuessTiming);
+  const [playbackPosition, setPlaybackPosition] = useState(0);
+  const [playbackDuration, setPlaybackDuration] = useState(0);
   const [playerError, setPlayerError] = useState<string | null>(null);
   const [playlistNotice, setPlaylistNotice] = useState<string | null>(null);
   const player = useRef<SpotifyPlayer | null>(null);
+  const playbackBasePosition = useRef(0);
+  const playbackUpdatedAt = useRef<number | null>(null);
   const roundStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
@@ -109,16 +171,23 @@ export function GamePage() {
 
         try {
           const liveSongs = await fetchPlaylistSongs(token.accessToken, playlistId);
-          if (!cancelled && liveSongs.length) {
+          if (!liveSongs.length) {
+            throw new Error("The Spotify playlist contains no playable tracks");
+          }
+          if (!cancelled) {
             setSongs(liveSongs);
-            setSong(randomSong(liveSongs));
+            setSong(weightedRandomSong(liveSongs, heardSongs, scores));
           }
         } catch (error) {
           if (!cancelled) {
             setPlaylistNotice(
-              `${error instanceof Error ? error.message : "The live playlist could not be loaded"}. Using the saved playlist snapshot.`,
+              error instanceof Error
+                ? error.message
+                : "The live Spotify playlist could not be loaded",
             );
+            setAuthStatus("playlist-error");
           }
+          return;
         }
 
         const spotify = await getSpotifyPlaybackSdk();
@@ -148,6 +217,14 @@ export function GamePage() {
           if (!cancelled) {
             setDeviceId(null);
             setAuthStatus("connecting");
+          }
+        });
+        browserPlayer.addListener("player_state_changed", (state) => {
+          if (state && !cancelled) {
+            setPlaybackPosition(state.position);
+            setPlaybackDuration(state.duration);
+            playbackBasePosition.current = state.position;
+            playbackUpdatedAt.current = state.paused ? null : performance.now();
           }
         });
         for (const event of [
@@ -184,6 +261,28 @@ export function GamePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!hasPlayed || result) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      if (playbackUpdatedAt.current === null) {
+        return;
+      }
+
+      const elapsed = performance.now() - playbackUpdatedAt.current;
+      const estimatedPosition = playbackBasePosition.current + elapsed;
+      setPlaybackPosition(
+        playbackDuration > 0
+          ? Math.min(estimatedPosition, playbackDuration)
+          : estimatedPosition,
+      );
+    }, 250);
+
+    return () => window.clearInterval(interval);
+  }, [hasPlayed, playbackDuration, result]);
+
   const totals = useMemo(
     () =>
       Object.values(scores).reduce(
@@ -206,6 +305,22 @@ export function GamePage() {
     [heardSongs, songs],
   );
 
+  const averageGuessTime =
+    guessTiming.correctGuesses > 0
+      ? guessTiming.totalSeconds / guessTiming.correctGuesses
+      : null;
+
+  function recordCorrectGuessTime(seconds: number) {
+    setGuessTiming((current) => {
+      const next = {
+        correctGuesses: current.correctGuesses + 1,
+        totalSeconds: current.totalSeconds + seconds,
+      };
+      localStorage.setItem(timingStorageKey, JSON.stringify(next));
+      return next;
+    });
+  }
+
   async function startSong(targetSong: GameSong) {
     if (!deviceId || !player.current || !spotifyClientId) {
       return;
@@ -220,6 +335,9 @@ export function GamePage() {
         return;
       }
       await playSpotifySong(token.accessToken, deviceId, targetSong);
+      setPlaybackPosition(0);
+      playbackBasePosition.current = 0;
+      playbackUpdatedAt.current = performance.now();
       setHeardSongs((current) => {
         if (current.has(targetSong.id)) {
           return current;
@@ -251,10 +369,16 @@ export function GamePage() {
     }
 
     void player.current?.pause();
+    playbackUpdatedAt.current = null;
     const nextResult: Result =
       normalizeTitle(guess) === normalizeTitle(song.title) ? "correct" : "incorrect";
-    if (roundStartedAt.current !== null) {
-      setGuessTime((performance.now() - roundStartedAt.current) / 1000);
+    const elapsedSeconds =
+      roundStartedAt.current === null
+        ? null
+        : (performance.now() - roundStartedAt.current) / 1000;
+    setGuessTime(elapsedSeconds);
+    if (nextResult === "correct" && elapsedSeconds !== null) {
+      recordCorrectGuessTime(elapsedSeconds);
     }
     const currentScore = scores[song.id] ?? { correct: 0, incorrect: 0 };
     const nextScores = {
@@ -271,12 +395,16 @@ export function GamePage() {
   }
 
   async function nextSong() {
-    const next = randomSong(songs, song.id);
+    const next = weightedRandomSong(songs, heardSongs, scores, song.id);
     setSong(next);
     setGuess("");
     setHasPlayed(false);
     setResult(null);
     setGuessTime(null);
+    setPlaybackPosition(0);
+    setPlaybackDuration(0);
+    playbackBasePosition.current = 0;
+    playbackUpdatedAt.current = null;
     roundStartedAt.current = null;
     await startSong(next);
   }
@@ -296,14 +424,19 @@ export function GamePage() {
     };
     setScores(nextScores);
     setResult("correct");
+    if (guessTime !== null) {
+      recordCorrectGuessTime(guessTime);
+    }
     localStorage.setItem(scoreStorageKey, JSON.stringify(nextScores));
   }
 
   function resetScores() {
     localStorage.removeItem(heardStorageKey);
     localStorage.removeItem(scoreStorageKey);
+    localStorage.removeItem(timingStorageKey);
     setHeardSongs(new Set());
     setScores({});
+    setGuessTiming({ correctGuesses: 0, totalSeconds: 0 });
   }
 
   function disconnectSpotify() {
@@ -327,6 +460,10 @@ export function GamePage() {
             <span><strong>{totals.correct}</strong> correct</span>
             <span><strong>{totals.incorrect}</strong> incorrect</span>
             <span><strong>{heardCount}/{songs.length}</strong> heard</span>
+            <span>
+              <strong>{averageGuessTime === null ? "—" : `${averageGuessTime.toFixed(1)}s`}</strong>
+              avg guess
+            </span>
           </div>
         </header>
 
@@ -347,20 +484,31 @@ export function GamePage() {
               Connect Spotify
             </button>
           </section>
+        ) : authStatus === "playlist-error" ? (
+          <section className="game-auth">
+            <h2>Playlist unavailable</h2>
+            <p>
+              The game will not use its saved snapshot, ensuring suggested songs
+              cannot enter the game.
+            </p>
+            <button type="button" onClick={() => window.location.reload()}>
+              Retry playlist
+            </button>
+          </section>
         ) : (
           <>
             <div className="game-player">
               <div className="game-player-cover">
-                <span
-                  className={`game-disc ${hasPlayed && !result ? "game-disc--playing" : ""}`}
-                  aria-hidden="true"
-                />
+                <strong className="game-player-time">
+                  {formatPlaybackTime(playbackPosition)}
+                  {playbackDuration > 0 && ` / ${formatPlaybackTime(playbackDuration)}`}
+                </strong>
                 <p>
                   {result
-                    ? "Answer revealed below."
+                    ? "Playback paused. Answer revealed below."
                     : hasPlayed
-                      ? "Playing the full song from 0:00."
-                      : "The answer stays hidden until you guess."}
+                      ? "Submit your guess when you're ready."
+                      : "Press Play to start the song."}
                 </p>
               </div>
             </div>
@@ -374,8 +522,8 @@ export function GamePage() {
               {authStatus !== "ready"
                 ? "Connecting Spotify…"
                 : hasPlayed
-                  ? "Restart from 0:00"
-                  : "Play from 0:00"}
+                  ? "Restart song"
+                  : "Play song"}
             </button>
 
             <form className="game-guess" onSubmit={submitGuess}>

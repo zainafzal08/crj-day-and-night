@@ -90,5 +90,4 @@ export const gameSongs: GameSong[] = [
   { id: "2CG3lX8ddjTEQL4kwBHkw3", title: "Don't Leave Me on the Dance Floor" },
   { id: "1C3SJEsAIPrHNz6bNZepoQ", title: "After All" },
   { id: "59edZBlolguuivWORanXkJ", title: "Motivation" },
-  { id: "5SenloD1HJ0w5HV70TTLAK", title: "Ordinary Superstar" },
 ];

@@ -1,11 +1,25 @@
 import type { GameSong } from "./game-songs";
 
+type SpotifyPlayerState = {
+  duration: number;
+  paused: boolean;
+  position: number;
+};
+
 export type SpotifyPlayer = {
   activateElement: () => Promise<void>;
-  addListener: (
+  addListener(
+    event: "player_state_changed",
+    listener: (value: SpotifyPlayerState | null) => void,
+  ): boolean;
+  addListener(
+    event: "ready" | "not_ready",
+    listener: (value: { device_id?: string }) => void,
+  ): boolean;
+  addListener(
     event: string,
     listener: (value: { device_id?: string; message?: string }) => void,
-  ) => boolean;
+  ): boolean;
   connect: () => Promise<boolean>;
   disconnect: () => void;
   pause: () => Promise<void>;

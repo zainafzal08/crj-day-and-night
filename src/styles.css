@@ -757,23 +757,13 @@ body {
   font-size: 0.85rem;
 }
 
-.game-disc {
-  width: 52px;
-  height: 52px;
-  border: 13px solid #f472b6;
-  border-radius: 50%;
-  background: #161218;
-  box-shadow: 0 0 36px rgb(244 114 182 / 35%);
-}
-
-.game-disc--playing {
-  animation: game-spin 3s linear infinite;
-}
-
-@keyframes game-spin {
-  to {
-    transform: rotate(1turn);
-  }
+.game-player-time {
+  color: #f9a8d4;
+  font-size: clamp(2rem, 8vw, 3.2rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .game-play-button,
@@ -1028,12 +1018,6 @@ body {
 
   .game-guess button {
     padding: 13px 20px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .game-disc {
-    animation: none;
   }
 }
 
