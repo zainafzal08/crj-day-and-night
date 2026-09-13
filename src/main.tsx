@@ -1,7 +1,8 @@
-import { StrictMode, useCallback, useState } from "react";
+import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource-variable/jost";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { initializeAnalytics, trackPageView } from "./analytics";
 import { DebugPage } from "./components/DebugPage";
 import { GamePage } from "./components/GamePage";
 import { LoadingScreen } from "./components/LoadingScreen";
@@ -16,6 +17,17 @@ import { SongProvider } from "./song-context";
 import "./styles.css";
 
 initializeSessionKey();
+initializeAnalytics();
+
+function AnalyticsPageTracker() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    trackPageView(pathname);
+  }, [pathname]);
+
+  return null;
+}
 
 function HomePage() {
   const [artworkReady, setArtworkReady] = useState(false);
@@ -45,6 +57,7 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <BrowserRouter>
+      <AnalyticsPageTracker />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/debug" element={<DebugPage />} />
